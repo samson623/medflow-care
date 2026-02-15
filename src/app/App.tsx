@@ -93,6 +93,10 @@ function AppInner() {
 
   useEffect(() => {
     void initialize()
+    // Clean up URL hash if it exists (e.g. leftover # from auth redirect)
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
   }, [initialize])
 
   useEffect(() => {
