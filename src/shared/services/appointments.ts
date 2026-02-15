@@ -1,0 +1,49 @@
+import { supabase } from '@/shared/lib/supabase'
+import type { Database } from '@/shared/types/database.types'
+import type { AppointmentCreateInput } from '@/shared/types/contracts'
+
+type Appointment = Database['public']['Tables']['appointments']['Row']
+
+export const AppointmentsService = {
+  async getAll(): Promise<Appointment[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .order('start_time')
+
+    if (error) throw error
+    return data
+  },
+
+  async create(appt: AppointmentCreateInput): Promise<Appointment> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert(appt)
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async update(id: string, updates: Partial<Appointment>): Promise<Appointment> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .update(updates)
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('appointments')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  },
+}
