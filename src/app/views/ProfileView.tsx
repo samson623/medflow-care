@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useAppStore } from '@/shared/stores/app-store'
 import { useAuthStore } from '@/shared/stores/auth-store'
 import { getErrorMessage } from '@/shared/lib/errors'
+import { usePushNotifications } from '@/shared/hooks/usePushNotifications'
 
 export function ProfileView() {
   const { setShowProfile, toast } = useAppStore()
   const { user, profile, isDemo, signOut, enrollMfa, verifyMfa } = useAuthStore()
+  const push = usePushNotifications()
 
   const [factorId, setFactorId] = useState<string | null>(null)
   const [qrCode, setQrCode] = useState<string | null>(null)
@@ -97,6 +99,44 @@ export function ProfileView() {
               </button>
             </>
           )}
+        </div>
+      )}
+
+      {!isDemo && (
+        <div style={{ padding: 16, background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border-primary)', borderRadius: 12, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>Push Notifications</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 2 }}>
+                {!push.isSupported
+                  ? 'Not supported in this browser'
+                  : push.permission === 'denied'
+                    ? 'Blocked — update in browser settings'
+                    : push.isSubscribed
+                      ? 'Medication reminders enabled'
+                      : 'Enable to get dose & appointment reminders'}
+              </div>
+            </div>
+            <button
+              onClick={() => push.isSubscribed ? push.unsubscribe() : push.subscribe()}
+              disabled={!push.isSupported || push.permission === 'denied' || push.isLoading}
+              style={{
+                width: 48, height: 26, borderRadius: 13, border: 'none', padding: 2,
+                background: push.isSubscribed ? 'var(--color-accent)' : 'var(--color-bg-tertiary)',
+                cursor: !push.isSupported || push.permission === 'denied' || push.isLoading ? 'not-allowed' : 'pointer',
+                transition: 'background 0.2s',
+                display: 'flex', alignItems: 'center',
+                opacity: !push.isSupported || push.permission === 'denied' ? 0.5 : 1,
+              }}
+            >
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%', background: '#fff',
+                transform: push.isSubscribed ? 'translateX(22px)' : 'translateX(0)',
+                transition: 'transform 0.2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              }} />
+            </button>
+          </div>
         </div>
       )}
 

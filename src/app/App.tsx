@@ -95,6 +95,12 @@ function AppInner() {
     void initialize()
   }, [initialize])
 
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => { })
+    }
+  }, [])
+
   if (isLoading) {
     return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-primary)' }}>Loading...</div>
   }

@@ -78,34 +78,54 @@ export const useAuthStore = create<AuthState>((set) => ({
       return
     }
 
-    const { data } = await supabase.auth.getSession()
-    const session = data.session
+    // Safety net: always clear loading after 5s max
+    const timeout = setTimeout(() => set({ isLoading: false }), 5000)
 
-    if (session) {
-      const profile = await fetchProfile(session.user.id)
-      set({ session, user: session.user, profile, isDemo: false, isLoading: false })
-    } else {
-      set({ session: null, user: null, profile: null, isDemo: false, isLoading: false })
-    }
+    // Listen for auth changes FIRST — catches OAuth hash fragment
+    supabase.auth.onAuthStateChange(async (event, nextSession) => {
+      console.log('[Auth] onAuthStateChange:', event)
+      clearTimeout(timeout)
 
-    supabase.auth.onAuthStateChange(async (_event, nextSession) => {
       if (!nextSession) {
         set({ session: null, user: null, profile: null, isDemo: false, isLoading: false })
         return
       }
 
-      const profile = await fetchProfile(nextSession.user.id)
+      let profile: Profile | null = null
+      try {
+        profile = await fetchProfile(nextSession.user.id)
+      } catch { }
+
       set({ session: nextSession, user: nextSession.user, profile, isDemo: false, isLoading: false })
     })
+
+    // Then check for existing session
+    try {
+      const { data } = await supabase.auth.getSession()
+      clearTimeout(timeout)
+
+      if (data.session) {
+        let profile: Profile | null = null
+        try { profile = await fetchProfile(data.session.user.id) } catch { }
+        set({ session: data.session, user: data.session.user, profile, isDemo: false, isLoading: false })
+      } else {
+        set({ session: null, user: null, profile: null, isDemo: false, isLoading: false })
+      }
+    } catch (err) {
+      console.error('[Auth] init error:', err)
+      clearTimeout(timeout)
+      set({ session: null, user: null, profile: null, isDemo: false, isLoading: false })
+    }
   },
 
   signInWithGoogle: async () => {
     if (env.isDemoApp) return { error: null }
 
+    // Always redirect to current origin so localhost and production both work
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: env.oauthRedirectUrl || window.location.origin,
+        redirectTo: window.location.origin,
       },
     })
 
