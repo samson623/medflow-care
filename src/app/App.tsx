@@ -93,11 +93,15 @@ function AppInner() {
 
   useEffect(() => {
     void initialize()
-    // Clean up URL hash if it exists (e.g. leftover # from auth redirect)
-    if (window.location.hash) {
+  }, [initialize])
+
+  useEffect(() => {
+    // Only clean up the hash if it's just an empty '#' (cosmetic)
+    // We strictly avoid touching it if it contains params (like access_token)
+    if (window.location.hash === '#') {
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
     }
-  }, [initialize])
+  }, [isLoading])
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
