@@ -24,6 +24,7 @@ create table if not exists public.medications (
   freq integer not null default 1 check (freq >= 1 and freq <= 24),
   color text not null default 'sky',
   icon text,
+  barcode text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );

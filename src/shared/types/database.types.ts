@@ -53,6 +53,7 @@ export interface Database {
           freq: number
           color: string
           icon: string | null
+          barcode: string | null
           created_at: string
           updated_at: string
         }
@@ -66,6 +67,7 @@ export interface Database {
           freq?: number
           color?: string
           icon?: string | null
+          barcode?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -77,6 +79,7 @@ export interface Database {
           freq?: number
           color?: string
           icon?: string | null
+          barcode?: string | null
           updated_at?: string
         }
         Relationships: []

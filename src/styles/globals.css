@@ -449,3 +449,42 @@ textarea {
 .fi::placeholder {
   color: var(--color-text-tertiary);
 }
+
+/* ============================================
+   BARCODE SCANNER
+   ============================================ */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scanPulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.scanner-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Hide html5-qrcode default branding */
+#barcode-scanner-reader img[alt="Info icon"],
+#barcode-scanner-reader__dashboard_section_swaplink,
+#barcode-scanner-reader__header_message {
+  display: none !important;
+}
