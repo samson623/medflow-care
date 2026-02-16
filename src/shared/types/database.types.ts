@@ -299,6 +299,30 @@ export interface Database {
         }
         Relationships: []
       }
+      ai_conversations: {
+        Row: {
+          id: string
+          user_id: string
+          role: string
+          content: string
+          model: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          role: string
+          content: string
+          model?: string | null
+          created_at?: string
+        }
+        Update: {
+          role?: string
+          content?: string
+          model?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {

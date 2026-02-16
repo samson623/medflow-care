@@ -1,3 +1,50 @@
+# MedFlow Care
+
+Medication management app built with React, TypeScript, Vite, and Supabase.
+
+---
+
+## GPT-5 Nano Setup
+
+1. Add your OpenAI API key to `.env`:
+   ```env
+   VITE_OPENAI_API_KEY=sk-your-openai-api-key
+   VITE_OPENAI_MODEL=gpt-5-nano
+   ```
+
+2. **Supabase Edge Function (production):** Set the secret so the API key stays server-side:
+   ```bash
+   supabase secrets set OPENAI_API_KEY=sk-your-openai-api-key
+   ```
+
+3. Deploy the `openai-chat` Edge Function and run migrations (see Supabase section below).
+
+---
+
+## Supabase Setup
+
+### Apply migrations
+
+In Supabase Dashboard → SQL Editor, run in order:
+1. `supabase/schema.sql` (base schema)
+2. `supabase/migrations/001_add_barcode_column.sql`
+3. `supabase/migrations/002_push_subscriptions.sql`
+4. `supabase/migrations/003_ai_conversations.sql`
+
+Or with Supabase CLI: `supabase db push`
+
+### Tables
+
+| Table | Purpose |
+|-------|---------|
+| profiles, medications, schedules | Core medication data |
+| dose_logs | Adherence tracking |
+| appointments, notes, refills, notifications | Supporting data |
+| push_subscriptions | Web Push notifications |
+| ai_conversations | GPT chat history |
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
