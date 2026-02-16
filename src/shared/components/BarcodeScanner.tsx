@@ -20,6 +20,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
     const scannerRef = useRef<Html5Qrcode | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [isStarting, setIsStarting] = useState(true)
+    const [scannedCode, setScannedCode] = useState<string | null>(null)
     const hasScannedRef = useRef(false)
 
     // Cleanup function
@@ -51,22 +52,13 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
                 const scanner = new Html5Qrcode(readerId, {
                     formatsToSupport: SUPPORTED_FORMATS,
                     verbose: false,
-                    experimentalFeatures: {
-                        useBarCodeDetectorIfSupported: true,
-                    },
                 })
                 scannerRef.current = scanner
 
                 const config = {
-                    fps: 15, // Increased FPS for faster scanning
-                    qrbox: { width: qrBoxSize, height: Math.floor(qrBoxSize * 0.6) }, // Rectangular box for barcodes
-                    aspectRatio: 1.0,
+                    fps: 15,
+                    qrbox: { width: qrBoxSize, height: Math.floor(qrBoxSize * 0.6) },
                     disableFlip: false,
-                    // Try to force back camera with higher preference
-                    videoConstraints: {
-                        facingMode: { ideal: "environment" },
-                        focusMode: "continuous", // vital for barcodes
-                    }
                 }
 
                 await scanner.start(
@@ -75,10 +67,12 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
                     (decodedText) => {
                         if (!hasScannedRef.current && mounted) {
                             hasScannedRef.current = true
-                            // Play a beep sound on success (optional, but adds to "premium" feel)
-                            // const audio = new Audio('/scan-beep.mp3'); audio.play().catch(() => {}); 
-                            if (navigator.vibrate) navigator.vibrate(200);
-                            onScan(decodedText)
+                            if (navigator.vibrate) navigator.vibrate(200)
+                            setScannedCode(decodedText)
+                            // Brief visual confirmation before forwarding
+                            setTimeout(() => {
+                                if (mounted) onScan(decodedText)
+                            }, 600)
                         }
                     },
                     () => {
@@ -186,16 +180,21 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
                             height: 200,
                             boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
                             borderRadius: 16,
-                            border: '2px solid rgba(255, 255, 255, 0.4)',
+                            border: scannedCode ? '3px solid #34C759' : '2px solid rgba(255, 255, 255, 0.4)',
+                            transition: 'border-color 0.2s',
                         }}>
                             {/* Corner Markers */}
-                            <div style={{ position: 'absolute', top: -2, left: -2, width: 20, height: 20, borderTop: '4px solid #00E0FF', borderLeft: '4px solid #00E0FF', borderTopLeftRadius: 16 }} />
-                            <div style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderTop: '4px solid #00E0FF', borderRight: '4px solid #00E0FF', borderTopRightRadius: 16 }} />
-                            <div style={{ position: 'absolute', bottom: -2, left: -2, width: 20, height: 20, borderBottom: '4px solid #00E0FF', borderLeft: '4px solid #00E0FF', borderBottomLeftRadius: 16 }} />
-                            <div style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderBottom: '4px solid #00E0FF', borderRight: '4px solid #00E0FF', borderBottomRightRadius: 16 }} />
+                            {(() => {
+                                const c = scannedCode ? '#34C759' : '#00E0FF'; return <>
+                                    <div style={{ position: 'absolute', top: -2, left: -2, width: 20, height: 20, borderTop: `4px solid ${c}`, borderLeft: `4px solid ${c}`, borderTopLeftRadius: 16 }} />
+                                    <div style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderTop: `4px solid ${c}`, borderRight: `4px solid ${c}`, borderTopRightRadius: 16 }} />
+                                    <div style={{ position: 'absolute', bottom: -2, left: -2, width: 20, height: 20, borderBottom: `4px solid ${c}`, borderLeft: `4px solid ${c}`, borderBottomLeftRadius: 16 }} />
+                                    <div style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderBottom: `4px solid ${c}`, borderRight: `4px solid ${c}`, borderBottomRightRadius: 16 }} />
+                                </>
+                            })()}
 
-                            {/* Scanning Laser Animation */}
-                            <div style={{
+                            {/* Scanning Laser Animation — hide once scanned */}
+                            {!scannedCode && <div style={{
                                 position: 'absolute',
                                 left: 10, right: 10,
                                 height: 2,
@@ -203,7 +202,19 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
                                 boxShadow: '0 0 8px 1px #00E0FF',
                                 borderRadius: '50%',
                                 animation: 'scan-laser 2s ease-in-out infinite'
-                            }} />
+                            }} />}
+
+                            {/* Success checkmark */}
+                            {scannedCode && (
+                                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span style={{ color: '#34C759', fontSize: 14, fontWeight: 700 }}>Code Scanned!</span>
+                                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontFamily: 'monospace' }}>{scannedCode}</span>
+                                </div>
+                            )}
+
                             <style>{`
                                 @keyframes scan-laser {
                                     0% { top: 10%; opacity: 0; }
@@ -222,7 +233,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
                             fontSize: 14,
                             textShadow: '0 1px 2px rgba(0,0,0,0.8)'
                         }}>
-                            Align barcode within frame
+                            {scannedCode ? 'Looking up medication...' : 'Align barcode within frame'}
                         </div>
                     </div>
                 )}
